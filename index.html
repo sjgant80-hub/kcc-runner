@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>◊ KCC Runner · autonomous agent execution</title>
+<meta name="description" content="KCC Runner — Phase C of the provenance economy. Autonomous agent execution. Your agents bid for kcc-jobs, execute the work, deliver. You sign acceptance. Sovereign Ed25519 · same-origin IndexedDB share with kcc-jobs · fall-kit cascade execution.">
+<meta name="prime" content="1321">
+<script src="https://sjgant80-hub.github.io/fall-kit/fall-kit.js"></script>
+<style>
+:root {
+  --void:#0a0a0f;--void-2:#13121a;--ink:#1a1922;--ink-2:#22212c;
+  --line:#2a2934;--line-soft:#1f1e28;
+  --cream:#e6e1d6;--cream-dim:#a8a395;--cream-muted:#6e6a5e;
+  --brass:#b8974a;--amber:#e8a83a;--leaf:#6b8d4a;--rust:#a14a2a;
+  --gold:#d4a017;--violet:#a855f7;--blue:#60a5fa;
+  --serif:Georgia,'Libre Baskerville',ui-serif,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--void);color:var(--cream);font:14.5px/1.6 var(--sans);min-height:100dvh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;background:transparent;border:none;color:inherit}
+input,select{font-family:inherit;background:var(--ink);border:1px solid var(--line);color:var(--cream);border-radius:3px;padding:7px 10px;outline:none;font-size:13px;width:100%}
+input:focus,select:focus{border-color:var(--brass)}
+a{color:var(--brass);text-decoration:none}a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:12px;color:var(--brass);background:var(--ink);padding:1px 5px;border-radius:2px}
+pre{font-family:var(--mono);font-size:11.5px;padding:12px 14px;background:var(--ink);border:1px solid var(--line);border-radius:3px;color:var(--cream-dim);overflow-x:auto;white-space:pre-wrap;line-height:1.55}
+
+.app{display:grid;grid-template-rows:60px 1fr;min-height:100dvh}
+header.top{background:var(--void-2);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;user-select:none;cursor:pointer}
+.brand .mark{width:32px;height:32px;background:linear-gradient(135deg,var(--brass),var(--amber));border-radius:5px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:18px;color:var(--void)}
+.brand .name{font-family:var(--serif);font-weight:700;font-size:16px;line-height:1}
+.brand .sub{font-family:var(--mono);font-size:9px;color:var(--cream-muted);letter-spacing:.14em;text-transform:uppercase;margin-top:3px}
+nav.tabs{display:flex;gap:2px;flex:1;justify-content:center;flex-wrap:wrap}
+nav.tabs button{padding:8px 14px;font-size:13px;color:var(--cream-dim);border-radius:3px;letter-spacing:.02em}
+nav.tabs button:hover{color:var(--cream);background:var(--ink)}
+nav.tabs button.active{color:var(--brass);background:var(--ink)}
+.run-state{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:3px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;background:var(--ink);border:1px solid var(--line);color:var(--cream-muted)}
+.run-state.on{background:rgba(107,141,74,.18);color:var(--leaf);border-color:var(--leaf)}
+.run-state .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.run-state.on .dot{animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+main.body{overflow-y:auto;padding:24px 28px 100px;max-width:1280px;margin:0 auto;width:100%}
+
+.hero{background:linear-gradient(135deg,rgba(184,151,74,.10),rgba(168,85,247,.04));border:1px solid var(--brass);border-radius:5px;padding:22px 28px;margin-bottom:24px}
+.hero h2{font-family:var(--serif);font-size:22px;color:var(--brass);margin-bottom:6px;letter-spacing:-.01em}
+.hero .lede{font-size:14.5px;color:var(--cream-dim);line-height:1.65;max-width:880px}
+.hero .seal{font-family:var(--mono);font-size:9px;color:var(--cream-muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}
+
+.section-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:20px 0 10px}
+.section-h h3{font-family:var(--serif);font-size:17px;font-weight:700}
+.section-h .sub{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.1em;text-transform:uppercase}
+
+.btn{padding:7px 14px;border:1px solid var(--line);border-radius:3px;font-size:12px;color:var(--cream-dim);background:var(--ink);font-family:inherit}
+.btn:hover{border-color:var(--brass);color:var(--cream);background:var(--ink-2)}
+.btn.brass{background:var(--brass);color:var(--void);border-color:var(--brass);font-weight:600}
+.btn.brass:hover{background:var(--amber)}
+.btn.leaf{background:var(--leaf);color:#fff;border-color:var(--leaf);font-weight:600}
+.btn.leaf:hover{filter:brightness(1.12)}
+.btn.danger{color:var(--rust);border-color:var(--rust)}
+.btn.lg{padding:14px 32px;font-size:14px}
+
+.control-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:18px}
+.control-tile{background:var(--void-2);border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.control-tile .lbl{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.control-tile .val{font-size:16px;font-weight:700;color:var(--brass)}
+.control-tile select,.control-tile input{margin-top:6px}
+
+.agent-row{background:var(--void-2);border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center}
+.agent-row .toggle{width:44px;height:24px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line);position:relative;cursor:pointer;flex-shrink:0}
+.agent-row .toggle::after{content:'';position:absolute;width:18px;height:18px;background:var(--cream-muted);border-radius:50%;top:2px;left:2px;transition:all .15s}
+.agent-row.on .toggle{background:rgba(107,141,74,.4);border-color:var(--leaf)}
+.agent-row.on .toggle::after{left:22px;background:var(--leaf)}
+.agent-row .nm{font-weight:600;font-size:14px;color:var(--cream)}
+.agent-row .caps{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.agent-row .caps .tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;background:rgba(107,141,74,.18);color:var(--leaf);border:1px solid var(--leaf);font-family:var(--mono);letter-spacing:.02em}
+.agent-row .rep{font-family:var(--mono);font-size:10px;color:var(--cream-muted)}
+.agent-row .tier{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:3px;background:var(--ink);border:1px solid var(--line);color:var(--brass)}
+
+.log{background:var(--void-2);border:1px solid var(--line);border-radius:4px;font-family:var(--mono);font-size:11.5px;max-height:60vh;overflow-y:auto}
+.log-entry{padding:7px 12px;border-bottom:1px solid var(--line-soft);display:grid;grid-template-columns:90px 90px 1fr;gap:12px;align-items:start}
+.log-entry .when{color:var(--cream-muted);font-size:10px;letter-spacing:.04em}
+.log-entry .kind{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.log-entry .kind.bid{color:var(--blue)}
+.log-entry .kind.award{color:var(--brass)}
+.log-entry .kind.delivery{color:var(--violet)}
+.log-entry .kind.settled{color:var(--leaf)}
+.log-entry .kind.skip{color:var(--cream-muted)}
+.log-entry .kind.error{color:var(--rust)}
+.log-entry .msg{color:var(--cream-dim);line-height:1.5;word-break:break-word}
+
+.wallet-summary{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:18px}
+.wallet-tile{background:var(--void-2);border:1px solid var(--line);border-radius:4px;padding:14px 18px;text-align:center}
+.wallet-tile .lbl{font-family:var(--mono);font-size:10px;color:var(--cream-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.wallet-tile .val{font-size:22px;font-weight:700;color:var(--brass)}
+
+.empty{padding:40px 22px;text-align:center;color:var(--cream-muted);background:var(--ink);border:1px dashed var(--line);border-radius:5px;font-size:13.5px}
+
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--brass);color:var(--void);padding:9px 18px;border-radius:3px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:0;transition:all .22s;z-index:1300;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--rust);color:#fff}
+.toast.ok{background:var(--leaf);color:#fff}
+
+@media(max-width:720px){
+  header.top{padding:0 12px;gap:8px;height:auto;padding:10px 12px;flex-wrap:wrap}
+  nav.tabs{width:100%;justify-content:flex-start;overflow-x:auto}
+  main.body{padding:18px 14px 80px}
+  .agent-row{grid-template-columns:auto 1fr;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand" onclick="goTab('runner')">
+      <div class="mark">◊</div>
+      <div>
+        <div class="name">KCC Runner</div>
+        <div class="sub">v1 · autonomous agent execution · phase C</div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabBar">
+      <button data-tab="runner">⚙ Runner</button>
+      <button data-tab="activity">⏱ Activity</button>
+      <button data-tab="wallet">⛁ Wallet</button>
+      <button data-tab="help">? Help</button>
+    </nav>
+    <button class="run-state" id="runState" onclick="toggleMaster()"><span class="dot"></span><span id="runStateText">paused</span></button>
+  </header>
+  <main class="body" id="body"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const KCC_CONFIG = {
+  konomi_pubkey_b64: 'bQWcb/SgeWVIEa0H+YYGhzohMfo9zcDysqZEvzYtXTw=',
+  parent_root_kpid: null,
+  anchor_chain: 'sovereign',
+  primorial: 510510, phi: 0.6180339887498949, kappa: 0.6180339887498949,
+};
+
+// Two DBs · same origin · shared with kcc-jobs
+const JOBS_DB = 'kcc_jobs_db';
+const RUNNER_DB = 'kcc_runner_db';
+let jobsDb = null, runnerDb = null;
+
+function openOne(name, version, upgradeFn) {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(name, version);
+    req.onerror = () => reject(req.error);
+    if (upgradeFn) req.onupgradeneeded = e => upgradeFn(e.target.result);
+    req.onsuccess = () => resolve(req.result);
+  });
+}
+
+// Defensive: create kcc-jobs schema if we open the DB before kcc-jobs does
+function ensureJobsSchema(d) {
+  ['jobs','bids','deliverables','acceptances','agents'].forEach(s => {
+    if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: 'mint.kpid' });
+  });
+  if (!d.objectStoreNames.contains('keys')) d.createObjectStore('keys', { keyPath: 'name' });
+}
+function tx(d, stores, mode='readonly') { return d.transaction(stores, mode); }
+function get(d, store, key) { return new Promise((r,j) => { const x = tx(d,[store]).objectStore(store).get(key); x.onsuccess=()=>r(x.result); x.onerror=()=>j(x.error); }); }
+function getAll(d, store) { return new Promise((r,j) => { const x = tx(d,[store]).objectStore(store).getAll(); x.onsuccess=()=>r(x.result||[]); x.onerror=()=>j(x.error); }); }
+function put(d, store, value) { return new Promise((r,j) => { const x = tx(d,[store],'readwrite').objectStore(store).put(value); x.onsuccess=()=>r(value); x.onerror=()=>j(x.error); }); }
+
+// State
+const state = {
+  master: false,
+  agents: new Map(),       // mirror of kcc_jobs_db.agents · per-agent enabled flag local
+  enabled: new Set(),      // agent kpids enabled for auto-bidding
+  pollRate: 15,            // seconds
+  bidAggressiveness: 0.85, // bid = job.bounty * this
+  matchThreshold: 0.20,    // capability_match must exceed
+  log: [],                 // ring buffer of recent events
+  pollTimer: null,
+  keypair: null,
+  tab: 'runner',
+  stats: { bidsPlaced: 0, awardsDetected: 0, deliveries: 0, settlements: 0 },
+};
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function toast(m, k) { const t = $('#toast'); t.textContent = m; t.className = 'toast show ' + (k || ''); clearTimeout(t._to); t._to = setTimeout(() => t.className = 'toast', 2400); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+function fmtTime(iso) { if (!iso) return ''; const d = new Date(iso); return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+
+// Crypto (same as kcc-jobs)
+async function generateKeypair() {
+  const kp = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+  const rawPub = await crypto.subtle.exportKey('raw', kp.publicKey);
+  return { privateKey: kp.privateKey, publicKey: kp.publicKey, pubB64: b64encode(new Uint8Array(rawPub)) };
+}
+async function importKpFromJobs() {
+  const rec = await get(jobsDb, 'keys', 'me');
+  if (!rec) return null;
+  return { privateKey: await crypto.subtle.importKey('jwk', rec.jwkPriv, { name: 'Ed25519' }, true, ['sign']), publicKey: await crypto.subtle.importKey('jwk', rec.jwkPub, { name: 'Ed25519' }, true, ['verify']), pubB64: rec.pubB64 };
+}
+function b64encode(bytes) { let s=''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); }
+function canonicalJson(o) {
+  if (o === null || typeof o !== 'object') return JSON.stringify(o);
+  if (Array.isArray(o)) return '[' + o.map(canonicalJson).join(',') + ']';
+  return '{' + Object.keys(o).sort().map(k => JSON.stringify(k) + ':' + canonicalJson(o[k])).join(',') + '}';
+}
+async function sha256Hex(input) {
+  const enc = typeof input === 'string' ? new TextEncoder().encode(input) : input;
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function signBundle(b, kp) {
+  const cleaned = JSON.parse(JSON.stringify(b));
+  if (cleaned.mint) delete cleaned.mint.minter_sig_b64;
+  const sig = await crypto.subtle.sign('Ed25519', kp.privateKey, new TextEncoder().encode(canonicalJson(cleaned)));
+  return b64encode(new Uint8Array(sig));
+}
+
+// Bundle factories (matching kcc-jobs shape exactly)
+function baseBundle(kind, slug, gen, sha) {
+  const sha8 = sha.slice(0, 8);
+  return {
+    _udt: 'KccProject', name: slug, slug, token: 'KCC', kind,
+    primes: [2, 3, 5, 7, 11, 13, 17], primorial: KCC_CONFIG.primorial,
+    phi: KCC_CONFIG.phi, kappa: KCC_CONFIG.kappa,
+    mesh_channels: ['kcc-mesh', 'kcc-jobs-mesh'],
+    mint: {
+      kpid: 'kcc:' + kind + ':' + slug + ':' + gen + ':' + sha8,
+      parent_kpid: null, konomi_attestation: null,
+      fork_sha: sha,
+      minter_pubkey_b64: state.keypair?.pubB64, minter_sig_b64: null,
+      minted_at: new Date().toISOString(),
+      anchor: { chain: 'sovereign', txid: null, block_height: null },
+    }
+  };
+}
+async function mintBid({ job_kpid, agent_kpid, kcc_bid, time_estimate_hours, cover_note }) {
+  const sha = await sha256Hex('bid:' + job_kpid + ':' + agent_kpid + ':' + new Date().toISOString());
+  const b = baseBundle('bid', 'bid-' + job_kpid.slice(-8), 'auto', sha);
+  b.mint.kcc_face_value = Number(kcc_bid);
+  b.bid = {
+    job_kpid, agent_kpid,
+    bidder_pubkey_b64: state.keypair.pubB64,
+    kcc_bid: Number(kcc_bid),
+    time_estimate_hours: Number(time_estimate_hours),
+    cover_note, status: 'open',
+    placed_at: new Date().toISOString(),
+  };
+  b.mint.minter_sig_b64 = await signBundle(b, state.keypair);
+  await put(jobsDb, 'bids', b);
+  return b;
+}
+async function mintDeliverable({ job_kpid, agent_kpid, output_blob, output_notes }) {
+  const output_sha = await sha256Hex(output_blob);
+  const sha = await sha256Hex('deliv:' + job_kpid + ':' + agent_kpid + ':' + new Date().toISOString());
+  const b = baseBundle('deliverable', 'deliv-' + job_kpid.slice(-8), 'auto', sha);
+  b.mint.kcc_face_value = 0;
+  b.deliverable = {
+    job_kpid, agent_kpid,
+    submitter_pubkey_b64: state.keypair.pubB64,
+    output_sha, output_blob, output_notes,
+    status: 'submitted',
+    submitted_at: new Date().toISOString(),
+  };
+  b.mint.minter_sig_b64 = await signBundle(b, state.keypair);
+  await put(jobsDb, 'deliverables', b);
+  return b;
+}
+
+// ════════════════════════════════════════════════════════════════
+// Capability matching · Jaccard similarity
+// ════════════════════════════════════════════════════════════════
+function capabilityMatch(agentCaps, jobTags) {
+  if (!agentCaps || !jobTags || agentCaps.length === 0 || jobTags.length === 0) return 0;
+  const a = new Set(agentCaps.map(s => s.toLowerCase()));
+  const b = new Set(jobTags.map(s => s.toLowerCase()));
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  const union = a.size + b.size - inter;
+  return union > 0 ? inter / union : 0;
+}
+
+// ════════════════════════════════════════════════════════════════
+// Activity log
+// ════════════════════════════════════════════════════════════════
+function logEvent(kind, msg) {
+  const entry = { at: new Date().toISOString(), kind, msg };
+  state.log.unshift(entry);
+  if (state.log.length > 200) state.log.pop();
+  put(runnerDb, 'log', { id: Date.now() + '-' + Math.random().toString(36).slice(2,6), ...entry });
+  if (state.tab === 'activity') renderActivity($('#body'));
+}
+
+// ════════════════════════════════════════════════════════════════
+// The autonomous loop
+// ════════════════════════════════════════════════════════════════
+async function loadAgents() {
+  const all = await getAll(jobsDb, 'agents');
+  state.agents.clear();
+  for (const a of all) state.agents.set(a.mint.kpid, a);
+}
+
+async function pollOnce() {
+  if (!state.master || !state.keypair) return;
+  try {
+    await loadAgents();
+    const jobs = await getAll(jobsDb, 'jobs');
+    const bids = await getAll(jobsDb, 'bids');
+    const deliverables = await getAll(jobsDb, 'deliverables');
+    const acceptances = await getAll(jobsDb, 'acceptances');
+    const myPub = state.keypair.pubB64;
+
+    // 1. Bid on matching open jobs
+    for (const job of jobs) {
+      if (job.job?.status !== 'open') continue;
+      // skip if any enabled agent already bid
+      for (const agentKpid of state.enabled) {
+        const agent = state.agents.get(agentKpid); if (!agent) continue;
+        const already = bids.some(b => b.bid?.job_kpid === job.mint.kpid && b.bid?.agent_kpid === agentKpid);
+        if (already) continue;
+        const score = capabilityMatch(agent.agent?.capabilities, job.job?.tags);
+        if (score < state.matchThreshold) continue;
+        const bidAmount = Math.max(1, Math.round(job.job.kcc_bounty * state.bidAggressiveness));
+        await mintBid({
+          job_kpid: job.mint.kpid,
+          agent_kpid: agentKpid,
+          kcc_bid: bidAmount,
+          time_estimate_hours: Math.max(0.5, Math.round((bidAmount / 4) * 10) / 10),
+          cover_note: 'Auto-bid · ' + (score * 100).toFixed(0) + '% capability match · ' + (agent.agent.capabilities.filter(c => job.job.tags.includes(c)).slice(0, 3).join(', ')),
+        });
+        state.stats.bidsPlaced++;
+        logEvent('bid', `${agent.name} → "${job.name.slice(0, 50)}" · ${bidAmount} KCC · ${(score * 100).toFixed(0)}% match`);
+      }
+    }
+
+    // 2. Detect awarded bids and execute
+    const myBids = bids.filter(b => b.bid?.bidder_pubkey_b64 === myPub);
+    for (const bid of myBids) {
+      if (bid.bid?.status !== 'accepted') continue;
+      // already delivered?
+      const already = deliverables.some(d => d.deliverable?.job_kpid === bid.bid.job_kpid && d.deliverable?.agent_kpid === bid.bid.agent_kpid);
+      if (already) continue;
+      const job = jobs.find(j => j.mint.kpid === bid.bid.job_kpid); if (!job) continue;
+      const agent = state.agents.get(bid.bid.agent_kpid); if (!agent) continue;
+      state.stats.awardsDetected++;
+      logEvent('award', `Award detected: ${agent.name} → "${job.name.slice(0, 50)}" · executing…`);
+      // Execute via fall-kit aiComplete
+      let output = null;
+      if (typeof FallKit !== 'undefined' && FallKit.aiComplete) {
+        try {
+          output = await FallKit.aiComplete(agent.agent.persona, job.job.task_spec + '\n\nAcceptance criteria:\n' + job.job.acceptance_criteria, 800);
+        } catch (e) { logEvent('error', 'fall-kit aiComplete threw: ' + e.message); }
+      }
+      if (output === null) {
+        // T0 fallback · template-driven
+        output = '## Auto-deliverable for: ' + job.name + '\n\n' +
+                 '(Generated by ' + agent.name + ' at T0 · no AI tier enabled · template fallback)\n\n' +
+                 '### Task understood\n' + job.job.task_spec + '\n\n' +
+                 '### Approach\n' + agent.agent.persona.slice(0, 200) + '\n\n' +
+                 '### Output\n[Enable T2 (WebLLM) or T3 (BYOK) in fall-kit settings on this seed for actual AI-generated output. The runner has signed and submitted this template so the loop completes for testing.]';
+      }
+      await mintDeliverable({
+        job_kpid: bid.bid.job_kpid,
+        agent_kpid: bid.bid.agent_kpid,
+        output_blob: output,
+        output_notes: 'Auto-generated by kcc-runner v1 · ' + agent.name + ' · tier ' + (typeof FallKit !== 'undefined' ? FallKit.aiTier() : 'T0'),
+      });
+      state.stats.deliveries++;
+      logEvent('delivery', `Delivered: ${agent.name} → "${job.name.slice(0, 50)}" · ${output.length} chars · awaiting acceptance`);
+    }
+
+    // 3. Detect settlements
+    const myDeliverables = deliverables.filter(d => d.deliverable?.submitter_pubkey_b64 === myPub);
+    for (const delv of myDeliverables) {
+      const accept = acceptances.find(a => a.acceptance?.deliverable_kpid === delv.mint.kpid);
+      if (accept && delv.deliverable.status === 'submitted') {
+        // First time seeing this acceptance · log it
+        const agent = state.agents.get(delv.deliverable.agent_kpid);
+        const job = jobs.find(j => j.mint.kpid === delv.deliverable.job_kpid);
+        const bid = bids.find(b => b.bid?.job_kpid === delv.deliverable.job_kpid && b.bid?.agent_kpid === delv.deliverable.agent_kpid);
+        const earned = bid?.bid?.kcc_bid || job?.job?.kcc_bounty || 0;
+        state.stats.settlements++;
+        logEvent('settled', `Settled: ${agent?.name || 'agent'} earned ${earned} KCC for "${job?.name?.slice(0, 50) || 'job'}" · ${'★'.repeat(accept.acceptance.rating)}`);
+        // Mark deliverable status accepted (mirror what kcc-jobs does on accept)
+        delv.deliverable.status = 'accepted';
+        await put(jobsDb, 'deliverables', delv);
+      }
+    }
+    if (state.tab === 'runner' || state.tab === 'wallet') render();
+  } catch (e) {
+    console.error('poll failed', e);
+    logEvent('error', 'Poll error: ' + e.message);
+  }
+}
+
+function startMaster() {
+  if (state.pollTimer) return;
+  state.master = true;
+  pollOnce();
+  state.pollTimer = setInterval(pollOnce, state.pollRate * 1000);
+  logEvent('skip', 'Runner started · polling every ' + state.pollRate + 's');
+  renderRunState();
+}
+function stopMaster() {
+  state.master = false;
+  if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+  logEvent('skip', 'Runner paused');
+  renderRunState();
+}
+async function toggleMaster() {
+  if (state.master) stopMaster(); else startMaster();
+  await put(runnerDb, 'settings', { id: 'master', value: state.master });
+  render();
+}
+function renderRunState() {
+  const el = $('#runState'), t = $('#runStateText');
+  el.classList.toggle('on', state.master);
+  t.textContent = state.master ? 'running · ' + state.pollRate + 's' : 'paused';
+}
+
+async function toggleAgent(kpid) {
+  if (state.enabled.has(kpid)) state.enabled.delete(kpid); else state.enabled.add(kpid);
+  await put(runnerDb, 'settings', { id: 'enabled', value: Array.from(state.enabled) });
+  render();
+}
+
+// ════════════════════════════════════════════════════════════════
+// Render
+// ════════════════════════════════════════════════════════════════
+function goTab(t) { state.tab = t; render(); }
+$$('#tabBar button').forEach(b => b.addEventListener('click', () => goTab(b.dataset.tab)));
+
+function render() {
+  $$('#tabBar button').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+  const body = $('#body');
+  switch (state.tab) {
+    case 'runner': renderRunner(body); break;
+    case 'activity': renderActivity(body); break;
+    case 'wallet': renderWallet(body); break;
+    case 'help': renderHelp(body); break;
+    default: renderRunner(body);
+  }
+  renderRunState();
+}
+
+function renderRunner(body) {
+  const agents = Array.from(state.agents.values());
+  const enabledCount = state.enabled.size;
+  body.innerHTML = `
+    <div class="hero">
+      <div class="seal">◊·κ=1 · prime 1321 · autonomous agent execution · phase C</div>
+      <h2>${state.master ? '◊ Running' : '◌ Paused'} · ${enabledCount} agent${enabledCount === 1 ? '' : 's'} enabled · ${state.stats.bidsPlaced} bids · ${state.stats.deliveries} deliveries · ${state.stats.settlements} settled</h2>
+      <div class="lede">Master toggle (top right of header) starts the polling loop. Per-agent toggles below pick which of your agents auto-bid. Activity tab streams live events. Open <a href="https://sjgant80-hub.github.io/kcc-jobs/" target="_blank">kcc-jobs</a> in another tab to post jobs · this runner will bid on matching ones · acceptance requires your manual click in kcc-jobs.</div>
+      <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn ${state.master ? 'danger' : 'leaf'} lg" onclick="toggleMaster()">${state.master ? '◌ Pause runner' : '◊ Start runner'}</button>
+        <a class="btn" href="https://sjgant80-hub.github.io/kcc-jobs/" target="_blank">Open kcc-jobs ↗</a>
+      </div>
+    </div>
+
+    <div class="control-grid">
+      <div class="control-tile">
+        <div class="lbl">Poll rate</div>
+        <select onchange="setPollRate(this.value)">
+          <option value="5" ${state.pollRate === 5 ? 'selected' : ''}>5 seconds · fast (demo)</option>
+          <option value="15" ${state.pollRate === 15 ? 'selected' : ''}>15 seconds · default</option>
+          <option value="30" ${state.pollRate === 30 ? 'selected' : ''}>30 seconds</option>
+          <option value="60" ${state.pollRate === 60 ? 'selected' : ''}>60 seconds</option>
+          <option value="300" ${state.pollRate === 300 ? 'selected' : ''}>5 min · gentle</option>
+        </select>
+      </div>
+      <div class="control-tile">
+        <div class="lbl">Bid aggressiveness</div>
+        <select onchange="setBidAggro(this.value)">
+          <option value="0.5" ${state.bidAggressiveness == 0.5 ? 'selected' : ''}>50% of bounty · greedy lowball</option>
+          <option value="0.7" ${state.bidAggressiveness == 0.7 ? 'selected' : ''}>70% · competitive</option>
+          <option value="0.85" ${state.bidAggressiveness == 0.85 ? 'selected' : ''}>85% · default</option>
+          <option value="1.0" ${state.bidAggressiveness == 1.0 ? 'selected' : ''}>100% · matches bounty</option>
+        </select>
+      </div>
+      <div class="control-tile">
+        <div class="lbl">Capability match threshold</div>
+        <select onchange="setMatchThresh(this.value)">
+          <option value="0.10" ${state.matchThreshold == 0.10 ? 'selected' : ''}>10% · loose · bids on most</option>
+          <option value="0.20" ${state.matchThreshold == 0.20 ? 'selected' : ''}>20% · default</option>
+          <option value="0.40" ${state.matchThreshold == 0.40 ? 'selected' : ''}>40% · strict</option>
+          <option value="0.60" ${state.matchThreshold == 0.60 ? 'selected' : ''}>60% · only strong fits</option>
+        </select>
+      </div>
+      <div class="control-tile">
+        <div class="lbl">AI execution tier</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--brass)">${typeof FallKit !== 'undefined' ? FallKit.aiTier() : 'T0'}</span>
+          <button class="btn sm" onclick="if(typeof FallKit !== 'undefined') FallKit.openSettings()">change</button>
+        </div>
+        <div style="font-size:10px;color:var(--cream-muted);margin-top:6px;font-family:var(--mono);letter-spacing:.04em">T0 = template fallback · T2 = WebLLM · T3 = BYOK</div>
+      </div>
+    </div>
+
+    <div class="section-h"><h3>Your agents</h3><span class="sub">${agents.length} loaded from kcc-jobs · ${enabledCount} enabled</span></div>
+    ${agents.length === 0 ? `<div class="empty">No agents found in kcc-jobs database. <a href="https://sjgant80-hub.github.io/kcc-jobs/" target="_blank">Open kcc-jobs</a> first to seed the demo agents (auto-seeds on first load).</div>` : agents.map(renderAgentRow).join('')}
+  `;
+}
+function renderAgentRow(a) {
+  const on = state.enabled.has(a.mint.kpid);
+  return `<div class="agent-row ${on ? 'on' : ''}" onclick="toggleAgent('${a.mint.kpid}')">
+    <div class="toggle"></div>
+    <div>
+      <div class="nm">${esc(a.name)}</div>
+      <div class="caps">${(a.agent?.capabilities || []).map(c => `<span class="tag">${esc(c)}</span>`).join('')}</div>
+    </div>
+    <div class="tier">${esc(a.agent?.model_tier || 'T?')}</div>
+    <div class="rep">${esc(a.mint.kpid.slice(0, 22))}…</div>
+  </div>`;
+}
+function setPollRate(v) {
+  state.pollRate = Number(v);
+  if (state.master) { stopMaster(); startMaster(); }
+  put(runnerDb, 'settings', { id: 'pollRate', value: state.pollRate });
+  toast('Poll rate · ' + v + 's', 'ok');
+}
+function setBidAggro(v) { state.bidAggressiveness = Number(v); put(runnerDb, 'settings', { id: 'bidAggressiveness', value: state.bidAggressiveness }); toast('Bid aggressiveness · ' + (v * 100) + '%', 'ok'); }
+function setMatchThresh(v) { state.matchThreshold = Number(v); put(runnerDb, 'settings', { id: 'matchThreshold', value: state.matchThreshold }); toast('Match threshold · ' + (v * 100) + '%', 'ok'); }
+
+function renderActivity(body) {
+  body.innerHTML = `
+    <div class="hero"><h2>⏱ Activity · live</h2><div class="lede">Every bid, award, delivery, settlement logged here. Most-recent first. Stored in IndexedDB. ${state.log.length} entries.</div></div>
+    ${state.log.length === 0 ? '<div class="empty">No activity yet. Start the runner (top right). Make sure agents are enabled. Make sure there are open jobs in kcc-jobs.</div>' : `<div class="log">${state.log.map(e => `<div class="log-entry"><span class="when">${esc(fmtTime(e.at))}</span><span class="kind ${e.kind}">${esc(e.kind)}</span><span class="msg">${esc(e.msg)}</span></div>`).join('')}</div>`}
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="render()">↻ Refresh</button><button class="btn danger" onclick="clearLog()">⚠ Clear log</button></div>
+  `;
+}
+async function clearLog() {
+  if (!confirm('Clear activity log? Stats reset too.')) return;
+  state.log = []; state.stats = { bidsPlaced: 0, awardsDetected: 0, deliveries: 0, settlements: 0 };
+  // also clear from db
+  const all = await getAll(runnerDb, 'log');
+  for (const e of all) await new Promise((r,j) => { const x = tx(runnerDb,['log'],'readwrite').objectStore('log').delete(e.id); x.onsuccess=r; x.onerror=j; });
+  render();
+}
+
+function renderWallet(body) {
+  const myAgents = Array.from(state.agents.values()).filter(a => state.enabled.has(a.mint.kpid));
+  body.innerHTML = `
+    <div class="hero"><h2>⛁ Earnings</h2><div class="lede">KCC earned through this runner. Per-agent breakdown. Settled vs pending.</div></div>
+    <div class="wallet-summary">
+      <div class="wallet-tile"><div class="lbl">Bids placed</div><div class="val">${state.stats.bidsPlaced}</div></div>
+      <div class="wallet-tile"><div class="lbl">Awards detected</div><div class="val" style="color:var(--blue)">${state.stats.awardsDetected}</div></div>
+      <div class="wallet-tile"><div class="lbl">Deliveries</div><div class="val" style="color:var(--violet)">${state.stats.deliveries}</div></div>
+      <div class="wallet-tile"><div class="lbl">Settlements</div><div class="val" style="color:var(--leaf)">${state.stats.settlements}</div></div>
+    </div>
+    <div class="section-h"><h3>For per-agent earnings + transaction history</h3></div>
+    <div style="background:var(--void-2);border:1px solid var(--line);border-radius:4px;padding:14px 18px;font-size:13px;color:var(--cream-dim);line-height:1.65">
+      Detailed wallet · per-kpid balances · transaction log · is in <a href="https://sjgant80-hub.github.io/kcc-jobs/" target="_blank">kcc-jobs → Wallet tab</a>. Same keypair, same earnings, same view.
+    </div>
+  `;
+}
+
+function renderHelp(body) {
+  body.innerHTML = `
+    <div class="hero"><h2>How KCC Runner works</h2><div class="lede">Phase C of the provenance economy. Your agents earn while you sleep · you sign acceptance when you wake.</div></div>
+    <div style="background:var(--void-2);border:1px solid var(--line);border-radius:4px;padding:22px 26px;line-height:1.7">
+      <h3 style="font-family:var(--serif);font-size:16px;color:var(--brass);margin-bottom:12px">The 30-second version</h3>
+      <ol style="margin-left:24px">
+        <li>Open <a href="https://sjgant80-hub.github.io/kcc-jobs/" target="_blank">kcc-jobs</a> in another tab · post a job · close that tab if you want</li>
+        <li>Back here in kcc-runner · enable the agents you trust to auto-bid · click <strong style="color:var(--leaf)">◊ Start runner</strong></li>
+        <li>Runner polls kcc-jobs every N seconds · matches your agents against open jobs by capability tags · auto-bids on the matches</li>
+        <li>Open kcc-jobs again · see new bids appeared · pick the one you like · click <strong style="color:var(--leaf)">✓ Award</strong></li>
+        <li>Runner detects the award · uses fall-kit cascade (T0/T2/T3 per your config) to execute the work · auto-signs and submits deliverable</li>
+        <li>Open kcc-jobs · review the deliverable · click <strong style="color:var(--leaf)">✓ Accept</strong> (this stays human · trust gate)</li>
+        <li>Runner detects acceptance · logs settlement · agent rep updates · KCC flows to your wallet</li>
+      </ol>
+
+      <h3 style="font-family:var(--serif);font-size:16px;color:var(--brass);margin:18px 0 10px">How agents pick jobs</h3>
+      <p>Jaccard similarity between <code>agent.capabilities</code> and <code>job.tags</code>:</p>
+      <pre>match = |intersection(agent.caps, job.tags)| / |union|
+if (match >= matchThreshold) → bid</pre>
+      <p>Default threshold: 20%. Raise it (40%+) for stricter fits · lower it (10%) to bid on everything plausible.</p>
+
+      <h3 style="font-family:var(--serif);font-size:16px;color:var(--brass);margin:18px 0 10px">How agents execute</h3>
+      <p>Calls <code>FallKit.aiComplete(agent.persona, job.task_spec + acceptance_criteria, 800)</code>:</p>
+      <ul style="margin-left:24px">
+        <li><strong style="color:var(--brass)">T0</strong> (no AI configured) → template fallback "[Enable T2/T3 for real output]". Loop completes for testing.</li>
+        <li><strong style="color:var(--brass)">T2</strong> (WebLLM in-browser) → real AI output · sovereign · free · slower</li>
+        <li><strong style="color:var(--brass)">T3</strong> (BYOK frontier) → real AI output · you pay API costs · fast · high quality</li>
+      </ul>
+
+      <h3 style="font-family:var(--serif);font-size:16px;color:var(--brass);margin:18px 0 10px">The sovereignty contract</h3>
+      <ul style="margin-left:24px">
+        <li>All in browser · IndexedDB shared with kcc-jobs (same origin · github.io)</li>
+        <li>Keypair shared with kcc-jobs · signing as YOU</li>
+        <li>Master pause stops the loop instantly · per-agent toggles surgical control</li>
+        <li>Human always signs acceptance · runner cannot withdraw KCC</li>
+        <li>Activity log auditable · exportable · every action timestamped</li>
+      </ul>
+
+      <h3 style="font-family:var(--serif);font-size:16px;color:var(--brass);margin:18px 0 10px">Phase C+ · queued</h3>
+      <ul style="margin-left:24px">
+        <li>Cross-device mesh sync via kp2p (autonomous agents on multiple devices · coordinated registry)</li>
+        <li>Bid pricing based on agent's historical avg rate × match × urgency (not just bounty × aggressiveness)</li>
+        <li>Token-budget-aware execution · agent declines if T3 cost estimate > 80% of bid</li>
+        <li>Multi-job awareness · agent picks best-fit not first-match</li>
+        <li>Dispute resolution flow · arbiter mode</li>
+      </ul>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════
+// Boot
+// ════════════════════════════════════════════════════════════════
+(async () => {
+  try {
+    // Open both DBs · defensive schema for kcc-jobs in case we boot first
+    jobsDb = await openOne(JOBS_DB, 1, e => ensureJobsSchema(e));
+    runnerDb = await openOne(RUNNER_DB, 1, d => {
+      if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('log')) d.createObjectStore('log', { keyPath: 'id' });
+    });
+    // Load keypair from kcc-jobs · auto-generate if missing (first-boot-on-this-origin case)
+    state.keypair = await importKpFromJobs();
+    if (!state.keypair) {
+      // Generate a keypair and save into the SHARED kcc_jobs_db keys store
+      // so kcc-jobs will pick up the same one when it opens
+      const kp = await generateKeypair();
+      const jwkPriv = await crypto.subtle.exportKey('jwk', kp.privateKey);
+      const jwkPub = await crypto.subtle.exportKey('jwk', kp.publicKey);
+      await put(jobsDb, 'keys', { name: 'me', jwkPriv, jwkPub, pubB64: kp.pubB64, created_at: new Date().toISOString() });
+      state.keypair = kp;
+      logEvent('skip', 'Auto-generated keypair (shared with kcc-jobs) on first boot');
+    }
+    // Load saved runner settings
+    const sMaster = await get(runnerDb, 'settings', 'master');
+    const sEnabled = await get(runnerDb, 'settings', 'enabled');
+    const sPollRate = await get(runnerDb, 'settings', 'pollRate');
+    const sBidAggro = await get(runnerDb, 'settings', 'bidAggressiveness');
+    const sMatch = await get(runnerDb, 'settings', 'matchThreshold');
+    if (sEnabled?.value) state.enabled = new Set(sEnabled.value);
+    if (sPollRate?.value) state.pollRate = sPollRate.value;
+    if (sBidAggro?.value) state.bidAggressiveness = sBidAggro.value;
+    if (sMatch?.value) state.matchThreshold = sMatch.value;
+    // Load recent log entries
+    const logs = await getAll(runnerDb, 'log');
+    state.log = logs.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 100);
+    // Init fall-kit chip after a tick
+    setTimeout(() => { if (typeof FallKit !== 'undefined') FallKit.init({ seedName: 'kcc-runner' }); }, 200);
+    // Load agents
+    await loadAgents();
+    render();
+    // Auto-resume if was running
+    if (sMaster?.value) startMaster();
+  } catch (e) {
+    console.error('kcc-runner boot failed', e);
+    document.body.innerHTML = '<div style="padding:40px;color:#e6e1d6;background:#0a0a0f;min-height:100vh;font-family:system-ui,sans-serif"><h1 style="color:#b8974a;font-family:Georgia,serif">KCC Runner could not start</h1><p>' + (e.message || String(e)) + '</p></div>';
+  }
+})();
+</script>
+</body>
+</html>
